@@ -1,0 +1,40 @@
+# ========== Node.js ==========
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# ========== Environment ==========
+# Env files (API key, DB password, JWT secret, etc.)
+.env
+.env.local
+.env.*.local
+
+# ========== System ==========
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# ========== IDE / Editor ==========
+# VSCode
+.vscode/
+# IntelliJ / WebStorm
+.idea/
+
+# ========== Optional ==========
+# Testing coverage
+coverage/
+# Temporary files
+tmp/
