@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema(
       required: [true, "Phone number is required"],
       match: [/^[0-9]{9,12}$/, "Please enter a valid phone number"],
     },
+    avatar: {
+      type: String,
+      default: "",
+    },
 
     bookingHistory: [
       {
@@ -42,6 +46,14 @@ const userSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now,
+    },
+    passwordResetToken: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
     },
   },
   {

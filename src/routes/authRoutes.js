@@ -4,7 +4,9 @@ import {
   login,
   superAdminTest,
   userTest,
-} from "..//controller/authController.js";
+  forgotPassword,
+  resetPassword,
+} from "../controller/authController.js"; 
 import {
   verifyToken as protect,
   requireAdmin,
@@ -13,8 +15,11 @@ import {
 
 const router = express.Router();
 
+// Public routes
 router.post("/register", register);
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // Protected routes
 router.get("/user-test", protect, userTest);
