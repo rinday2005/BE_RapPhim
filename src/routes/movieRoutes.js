@@ -62,4 +62,3 @@ router.delete("/:movieId", protect, requireAdmin, deleteMovie);
 
 export default router;
 
-
