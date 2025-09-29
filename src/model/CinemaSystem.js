@@ -14,3 +14,5 @@ const CinemaSystem = mongoose.model("CinemaSystem", cinemaSystemSchema);
 export default CinemaSystem;
 
 
+
+

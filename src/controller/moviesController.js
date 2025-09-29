@@ -1,5 +1,15 @@
 import Movie from "../model/Movie.js";
 
+function parseBooleanLike(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase();
+    return v === "true" || v === "1" || v === "yes" || v === "on";
+  }
+  return false;
+}
+
 // GET /api/movies
 export const listMovies = async (_req, res) => {
   try {
@@ -67,8 +77,8 @@ export const createMovie = async (req, res) => {
         ? body.cast.split(",").map((c) => c.trim()).filter(Boolean)
         : [],
       imdbRating: body.imdbRating ? Number(body.imdbRating) : 0,
-      isHot: Boolean(body.isHot),
-      isComingSoon: Boolean(body.isComingSoon),
+      isHot: parseBooleanLike(body.isHot),
+      isComingSoon: parseBooleanLike(body.isComingSoon),
       status: body.status === "coming_soon" ? "coming_soon" : "showing",
     };
 
@@ -101,6 +111,10 @@ export const updateMovie = async (req, res) => {
     if (typeof body.cast === "string") {
       updates.cast = body.cast.split(",").map((c) => c.trim()).filter(Boolean);
     }
+
+    // Normalize boolean-like values from multipart/form-data
+    if (body.isHot !== undefined) updates.isHot = parseBooleanLike(body.isHot);
+    if (body.isComingSoon !== undefined) updates.isComingSoon = parseBooleanLike(body.isComingSoon);
 
     const posterPath = req.files?.poster?.[0]?.path?.replace(/\\/g, "/");
     const trailerPath = req.files?.trailer?.[0]?.path?.replace(/\\/g, "/");

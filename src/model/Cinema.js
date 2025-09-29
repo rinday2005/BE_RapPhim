@@ -15,3 +15,5 @@ const Cinema = mongoose.model("Cinema", cinemaSchema);
 export default Cinema;
 
 
+
+

@@ -48,3 +48,5 @@ export const cinemasWithRooms = async (_req, res) => {
 };
 
 
+
+

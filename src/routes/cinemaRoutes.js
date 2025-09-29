@@ -13,3 +13,5 @@ router.delete("/:id", verifyToken, requireAdmin, deleteCinema);
 export default router;
 
 
+
+
