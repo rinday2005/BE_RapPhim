@@ -1,6 +1,16 @@
 import express from "express";
-import { verifyToken as protect, requireAdmin } from "../middlewares/authMiddleware.js";
-import { getMe, updateMe, changePassword, listUsers, updateUserRole, deleteUser } from "../controller/usersController.js";
+import {
+  verifyToken as protect,
+  requireAdmin,
+} from "../middleware/authMiddleware.js";
+import {
+  getMe,
+  updateMe,
+  changePassword,
+  listUsers,
+  updateUserRole,
+  deleteUser,
+} from "../controller/userController.js";
 
 const router = express.Router();
 
@@ -16,5 +26,3 @@ router.put("/:id/role", protect, requireAdmin, updateUserRole);
 router.delete("/:id", protect, requireAdmin, deleteUser);
 
 export default router;
-
-

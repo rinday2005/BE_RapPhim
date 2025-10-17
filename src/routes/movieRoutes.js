@@ -2,8 +2,17 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { verifyToken as protect, requireAdmin } from "../middlewares/authMiddleware.js";
-import { listMovies, getMovieDetail, createMovie, updateMovie, deleteMovie } from "../controller/moviesController.js";
+import {
+  verifyToken as protect,
+  requireAdmin,
+} from "../middleware/authMiddleware.js";
+import {
+  listMovies,
+  getMovieDetail,
+  createMovie,
+  updateMovie,
+  deleteMovie,
+} from "../controller/movieController.js";
 
 // Ensure upload directories exist
 const ensureDir = (dir) => {
@@ -18,8 +27,10 @@ ensureDir(path.join(uploadsRoot, "trailers"));
 // Multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    if (file.fieldname === "poster") cb(null, path.join(uploadsRoot, "posters"));
-    else if (file.fieldname === "trailer") cb(null, path.join(uploadsRoot, "trailers"));
+    if (file.fieldname === "poster")
+      cb(null, path.join(uploadsRoot, "posters"));
+    else if (file.fieldname === "trailer")
+      cb(null, path.join(uploadsRoot, "trailers"));
     else cb(null, uploadsRoot);
   },
   filename: (_req, file, cb) => {
@@ -61,4 +72,3 @@ router.put(
 router.delete("/:movieId", protect, requireAdmin, deleteMovie);
 
 export default router;
-

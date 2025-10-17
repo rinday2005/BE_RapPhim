@@ -12,7 +12,12 @@ export const createRoom = async (req, res) => {
   if (!name?.trim() || !cinemaId) {
     return res.status(400).json({ message: "Tên và cinemaId là bắt buộc" });
   }
-  const doc = await Room.create({ name: name.trim(), capacity, type, cinemaId });
+  const doc = await Room.create({
+    name: name.trim(),
+    capacity,
+    type,
+    cinemaId,
+  });
   res.status(201).json({ room: doc });
 };
 
@@ -33,7 +38,5 @@ export const deleteRoom = async (req, res) => {
   await Room.findByIdAndDelete(id);
   res.json({ message: "Đã xóa" });
 };
-
-
 
 

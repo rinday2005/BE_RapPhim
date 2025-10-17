@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "../model/User.js";
-import { generateToken } from "../utils/auth.js"; // import hàm tạo token
+import bcrypt from "bcryptjs";
+import { generateToken } from "../utils/auth.js";
 
 dotenv.config();
 
@@ -11,10 +12,13 @@ const seedAdmin = async () => {
 
     let admin;
     if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash("123456", 10);
+
       admin = await User.create({
+        username: "admin",
         fullName: "Super Admin",
         email: "admin@rapphim.com",
-        password: "123456", // Password sẽ được hash tự động trong pre-save hook
+        password: "123456", //Password sẽ được hash tự động trong pre-save hook
         phone: "0123456789",
         role: "superadmin",
       });

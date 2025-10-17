@@ -21,7 +21,9 @@ export const updateMe = async (req, res) => {
     if (typeof phone === "string") updates.phone = phone;
     if (typeof avatar === "string") updates.avatar = avatar;
 
-    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-password");
+    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+      new: true,
+    }).select("-password");
     return res.json({ message: "Cập nhật thành công", user });
   } catch (e) {
     return res.status(500).json({ message: "Server error", error: e.message });
@@ -39,7 +41,8 @@ export const changePassword = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const matches = await user.matchPassword(currentPassword);
-    if (!matches) return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
+    if (!matches)
+      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
 
     user.password = newPassword; // pre-save hook will hash
     await user.save();
@@ -67,7 +70,11 @@ export const updateUserRole = async (req, res) => {
     if (!role || !["user", "admin", "superadmin"].includes(role)) {
       return res.status(400).json({ message: "Role không hợp lệ" });
     }
-    const user = await User.findByIdAndUpdate(id, { role }, { new: true }).select("-password");
+    const user = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    ).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.json({ message: "Cập nhật role thành công", user });
   } catch (e) {
@@ -86,5 +93,3 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: e.message });
   }
 };
-
-

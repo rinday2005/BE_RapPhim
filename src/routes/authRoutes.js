@@ -6,12 +6,12 @@ import {
   userTest,
   forgotPassword,
   resetPassword,
-} from "../controller/authController.js"; 
+} from "../controller/authController.js";
 import {
   verifyToken as protect,
   requireAdmin,
   requireSuperAdmin,
-} from "../middlewares/authMiddleware.js";
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 

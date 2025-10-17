@@ -16,8 +16,11 @@ const MovieSchema = new mongoose.Schema(
     cast: { type: [String], default: [] },
     imdbRating: { type: Number, default: 0 },
     isHot: { type: Boolean, default: false },
-    isComingSoon: { type: Boolean, default: false },
-    status: { type: String, enum: ["showing", "coming_soon"], default: "showing" },
+    status: {
+      type: String,
+      enum: ["showing", "coming_soon"],
+      default: "showing",
+    },
   },
   { timestamps: true }
 );
@@ -35,5 +38,4 @@ MovieSchema.pre("save", async function (next) {
   }
 });
 
-const Movie = mongoose.model("Movie", MovieSchema);
-export default Movie;
+export default mongoose.models.Movie || mongoose.model("Movie", MovieSchema);

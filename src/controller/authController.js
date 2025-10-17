@@ -6,12 +6,12 @@ import crypto from "crypto";
 //-------------------------Đăng ký------------------//
 export const register = async (req, res) => {
   try {
-    console.log('Register request body:', req.body);
-    
+    console.log("Register request body:", req.body);
+
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({ message: "Request body is empty" });
     }
-    
+
     const { fullName, email, password, phone } = req.body;
 
     const existingEmail = await User.findOne({ email });
@@ -48,12 +48,12 @@ export const register = async (req, res) => {
 // ----------------------Đăng nhập--------------------//
 export const login = async (req, res) => {
   try {
-    console.log('Login request body:', req.body);
-    
+    console.log("Login request body:", req.body);
+
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({ message: "Request body is empty" });
     }
-    
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -67,9 +67,9 @@ export const login = async (req, res) => {
     }
 
     const payload = { id: user._id, role: user.role };
-    const token = jwt.sign(
-      payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES }
-    );
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES,
+    });
 
     const { password: _, ...userData } = user.toObject();
 
@@ -106,11 +106,16 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       // Trả về 200 để tránh lộ email tồn tại hay không
-      return res.json({ message: "Nếu email tồn tại, liên kết đặt lại đã được gửi" });
+      return res.json({
+        message: "Nếu email tồn tại, liên kết đặt lại đã được gửi",
+      });
     }
 
     const rawToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
 
     user.passwordResetToken = tokenHash;
@@ -118,12 +123,16 @@ export const forgotPassword = async (req, res) => {
     await user.save();
 
     // In thực tế: gửi email. Ở đây trả về URL để FE có thể hiển thị/ghi lại
-    const resetUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password?token=${rawToken}&id=${user._id}`;
+    const resetUrl = `${
+      process.env.CLIENT_URL || "http://localhost:3000"
+    }/reset-password?token=${rawToken}&id=${user._id}`;
 
     return res.json({ message: "Đã gửi hướng dẫn đặt lại mật khẩu", resetUrl });
   } catch (error) {
     console.error("Forgot password error:", error.message);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -144,7 +153,9 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Token không hợp lệ hoặc đã hết hạn" });
+      return res
+        .status(400)
+        .json({ message: "Token không hợp lệ hoặc đã hết hạn" });
     }
 
     user.password = newPassword; // sẽ được hash trong pre-save hook
@@ -155,6 +166,8 @@ export const resetPassword = async (req, res) => {
     return res.json({ message: "Đặt lại mật khẩu thành công" });
   } catch (error) {
     console.error("Reset password error:", error.message);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };

@@ -1,6 +1,11 @@
 import express from "express";
-import { verifyToken, requireAdmin } from "../middlewares/authMiddleware.js";
-import { listSystems, createSystem, updateSystem, deleteSystem } from "../controller/cinemaSystemsController.js";
+import { verifyToken, requireAdmin } from "../middleware/authMiddleware.js";
+import {
+  listSystems,
+  createSystem,
+  updateSystem,
+  deleteSystem,
+} from "../controller/cinemaSystemsController.js";
 
 const router = express.Router();
 
@@ -10,7 +15,3 @@ router.put("/:id", verifyToken, requireAdmin, updateSystem);
 router.delete("/:id", verifyToken, requireAdmin, deleteSystem);
 
 export default router;
-
-
-
-

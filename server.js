@@ -12,10 +12,12 @@ import showtimeRoutes from "./src/routes/showtimeRoutes.js";
 import cinemaSystemRoutes from "./src/routes/cinemaSystemRoutes.js";
 import cinemaRoutes from "./src/routes/cinemaRoutes.js";
 import roomRoutes from "./src/routes/roomRoutes.js";
+import seatLockRoutes from "./src/routes/seatLockRoutes.js";
+import bookingRoutes from "./src/routes/bookingRoutes.js";
 import path from "path";
 
 // Middleware kiểm tra token/role
-import { verifyToken, requireAdmin, requireSuperAdmin } from "./src/middlewares/authMiddleware.js";
+import { verifyToken, requireAdmin, requireSuperAdmin } from "./src/middleware/authMiddleware.js";
 
 dotenv.config();
 
@@ -80,6 +82,8 @@ app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/cinema-systems", cinemaSystemRoutes);
 app.use("/api/cinemas", cinemaRoutes);
 app.use("/api/rooms", roomRoutes);
+app.use("/api/seat-locks", seatLockRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // ===== Example protected routes =====
 app.get("/api/admin/data", verifyToken, requireAdmin, (req, res) => {

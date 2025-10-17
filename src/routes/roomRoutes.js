@@ -1,6 +1,11 @@
 import express from "express";
-import { verifyToken, requireAdmin } from "../middlewares/authMiddleware.js";
-import { listRooms, createRoom, updateRoom, deleteRoom } from "../controller/roomsController.js";
+import { verifyToken, requireAdmin } from "../middleware/authMiddleware.js";
+import {
+  listRooms,
+  createRoom,
+  updateRoom,
+  deleteRoom,
+} from "../controller/roomsController.js";
 
 const router = express.Router();
 
@@ -10,7 +15,3 @@ router.put("/:id", verifyToken, requireAdmin, updateRoom);
 router.delete("/:id", verifyToken, requireAdmin, deleteRoom);
 
 export default router;
-
-
-
-

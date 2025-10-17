@@ -10,7 +10,11 @@ export const createSystem = async (req, res) => {
   if (!name?.trim() || !logo?.trim()) {
     return res.status(400).json({ message: "Tên và logo là bắt buộc" });
   }
-  const doc = await CinemaSystem.create({ name: name.trim(), logo: logo.trim(), address: address || "" });
+  const doc = await CinemaSystem.create({
+    name: name.trim(),
+    logo: logo.trim(),
+    address: address || "",
+  });
   res.status(201).json({ system: doc });
 };
 
@@ -31,7 +35,5 @@ export const deleteSystem = async (req, res) => {
   await CinemaSystem.findByIdAndDelete(id);
   res.json({ message: "Đã xóa" });
 };
-
-
 
 
