@@ -66,7 +66,8 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const payload = { id: user._id, role: user.role };
+    // Include email in JWT so downstream middleware can attach req.user.email
+    const payload = { id: user._id, role: user.role, email: user.email };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES,
     });

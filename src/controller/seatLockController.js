@@ -1,5 +1,7 @@
 import SeatLock from "../model/SeatLock.js";
+import mongoose from "mongoose";
 import Showtime from "../model/showtime.js";
+import Booking from "../model/Booking.js";
 
 // ✅ Giữ ghế (lock seats)
 export const lockSeats = async (req, res) => {
@@ -137,21 +139,37 @@ export const unlockSeats = async (req, res) => {
 // ✅ Xác nhận đặt vé (confirm booking)
 export const confirmBooking = async (req, res) => {
   try {
-    const { lockId, userId, bookingData } = req.body;
-    if (!lockId || !userId || !bookingData)
+    const { lockId, bookingData } = req.body;
+    // Trust authenticated user from token, not client-sent userId
+    const authUserId = req.user?._id || req.user?.id;
+    const userId = authUserId ? String(authUserId) : undefined;
+    const userObjectId = authUserId ? new mongoose.Types.ObjectId(authUserId) : undefined;
+
+    console.log("[confirmBooking] body:", {
+      lockId,
+      userIdFromToken: userId,
+      bookingDataKeys: bookingData ? Object.keys(bookingData) : null,
+    });
+    if (!lockId || !userId || !bookingData) {
       return res.status(400).json({ message: "Thiếu dữ liệu." });
+    }
 
     // 1️⃣ Kiểm tra lock hợp lệ
-    const seatLock = await SeatLock.findOne({
-      _id: lockId,
-      userId,
-      isActive: true,
-      expiresAt: { $gt: new Date() }
-    });
-    if (!seatLock)
-      return res.status(404).json({ message: "Không tìm thấy lock hoặc đã hết hạn." });
+    let seatLock = await SeatLock.findOne({ _id: lockId, userId });
+    if (!seatLock) {
+      return res.status(404).json({ message: "Không tìm thấy lock cho người dùng." });
+    }
+    const isExpired = !(seatLock.isActive && seatLock.expiresAt > new Date());
+    if (isExpired) {
+      // Cho phép confirm idempotent: nếu đã inactive nhưng seats đã occupied, vẫn tạo booking
+      console.warn("confirmBooking: lock inactive or expired, tiếp tục theo idempotent mode");
+    }
 
     // 2️⃣ Cập nhật trạng thái ghế → "occupied"
+    console.log("[confirmBooking] seatLock:", {
+      showtimeId: seatLock?.showtimeId,
+      seatNumbers: seatLock?.seatNumbers,
+    });
     const showtime = await Showtime.findById(seatLock.showtimeId);
     if (!showtime)
       return res.status(404).json({ message: "Không tìm thấy suất chiếu." });
@@ -159,43 +177,93 @@ export const confirmBooking = async (req, res) => {
     // Hỗ trợ cả 2 cấu trúc dữ liệu ghế: seatData hoặc seats
     const hasSeatData = Array.isArray(showtime.seatData) && showtime.seatData.length >= 0;
     const currentSeats = hasSeatData
-      ? Array.isArray(showtime.seatData) ? showtime.seatData : []
-      : Array.isArray(showtime.seats) ? showtime.seats : [];
-
-    if (!Array.isArray(currentSeats) || currentSeats.length === 0) {
-      return res.status(500).json({ message: "Dữ liệu ghế của suất chiếu không hợp lệ." });
-    }
+      ? (Array.isArray(showtime.seatData) ? showtime.seatData : [])
+      : (Array.isArray(showtime.seats) ? showtime.seats : []);
 
     let updated = 0;
-    const updatedSeats = currentSeats.map((seat) => {
-      if (seatLock.seatNumbers.includes(seat.seatNumber)) {
-        seat.status = "occupied";
-        updated++;
-      }
-      return seat;
-    });
+    if (Array.isArray(currentSeats) && currentSeats.length > 0 && Array.isArray(seatLock.seatNumbers)) {
+      const updatedSeats = currentSeats.map((seat) => {
+        if (seatLock.seatNumbers.includes(seat.seatNumber)) {
+          seat.status = "occupied";
+          updated++;
+        }
+        return seat;
+      });
 
-    if (hasSeatData) {
-      showtime.seatData = updatedSeats;
+      if (updatedSeats.length > 0) {
+        if (hasSeatData) {
+          showtime.seatData = updatedSeats;
+        } else {
+          showtime.seats = updatedSeats;
+        }
+        await showtime.save();
+      }
     } else {
-      showtime.seats = updatedSeats;
+      console.warn("confirmBooking: seats array missing or empty; skipping seat update", {
+        showtimeId: showtime._id?.toString?.(),
+        seatNumbers: seatLock.seatNumbers,
+      });
     }
 
-    await showtime.save();
-
     // 3️⃣ Hủy hiệu lực lock (vì đã đặt vé xong)
-    seatLock.isActive = false;
-    await seatLock.save();
+    if (seatLock.isActive) {
+      seatLock.isActive = false;
+      await seatLock.save();
+    }
 
     console.log(`✅ Đặt vé thành công: ${updated} ghế chuyển sang trạng thái 'occupied'.`);
 
-    res.json({
-      success: true,
-      message: "Đặt vé thành công — ghế đã được đánh dấu 'đã đặt'.",
-      bookingCode: `BK${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
-    });
+    // 4️⃣ Tạo bản ghi Booking để hiển thị ở lịch sử
+      const bookingCode = `BK${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      const seats = Array.isArray(bookingData.selectedSeats)
+        ? bookingData.selectedSeats.map((s) => ({
+            seatNumber: s.seatNumber || s,
+            type: s.type || "regular",
+            price: Number(s.price || 0),
+          }))
+        : [];
+      const combosArr = Object.entries(bookingData.selectedCombos || {})
+        .filter(([, q]) => q > 0)
+        .map(([comboId, quantity]) => ({ comboId, name: String(comboId), price: 0, quantity }));
+
+      // Ensure required fields align with Booking schema
+      const userEmail = req.user?.email || bookingData.userEmail;
+      if (!userEmail) {
+        return res.status(400).json({ message: "Thiếu email người dùng để tạo booking." });
+      }
+
+      await Booking.create({
+        userId: userObjectId,
+        userEmail,
+        showtimeId: String(seatLock.showtimeId || bookingData.showtimeId || ""),
+        movieTitle: bookingData.movieTitle,
+        moviePoster: bookingData.moviePoster,
+        cinemaInfo: {
+          systemName: bookingData.systemName,
+          clusterName: bookingData.clusterName,
+          hallName: bookingData.hallName,
+        },
+        showtimeInfo: {
+          date: bookingData.date,
+          startTime: bookingData.startTime,
+          endTime: bookingData.endTime,
+        },
+        seats,
+        combos: combosArr,
+        total: Number(bookingData.total || 0),
+        paymentMethod: bookingData.paymentMethod || "momo",
+        paymentStatus: "paid",
+        bookingStatus: "confirmed",
+        bookingCode,
+      });
+
+      return res.json({
+        success: true,
+        message: "Đặt vé thành công",
+        bookingCode,
+      });
   } catch (error) {
     console.error("❌ confirmBooking error:", error);
-    res.status(500).json({ message: error.message || "Lỗi khi xác nhận đặt vé." });
+    return res.status(500).json({ message: error.message || "Lỗi khi xác nhận đặt vé." });
   }
 };

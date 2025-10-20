@@ -82,6 +82,7 @@ BookingSchema.index({ bookingCode: 1 });
 BookingSchema.index({ paymentStatus: 1 });
 BookingSchema.index({ createdAt: -1 });
 
-const Booking = mongoose.model("Booking", BookingSchema);
+// Avoid OverwriteModelError in hot-restarts
+const Booking = mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
 
 export default Booking;
